@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import Navigation from './components/Navigation/Navigation'
+import FaceRecognition from './components/FaceRecognition/FaceRecognition'
 import Logo from './components/Logo/Logo'
 import Rank from "./components/Rank/Rank"
 import ImageLinkForm from './components/ImageLinkForm/ImageLinkForm'
@@ -37,6 +38,7 @@ class App extends Component {
     super()
     this.state  = {
       input: '',
+      imageUrl: ''
     }
   }
 
@@ -45,10 +47,10 @@ class App extends Component {
   }
 
   onButtonSubmit = () => {
-    console.log('click')
+    this.setState({imageUrl: input})
     app.models
       .predict(
-        "ad5b9825c91e49818b99163fdf1ad0d1",
+        Clarifai.COLOR_MODEL,
         "https://samples.clarifai.com/metro-north.jpg"
       )
       .then(
@@ -72,7 +74,7 @@ class App extends Component {
           onInputChange={this.onInputChange} 
           onButtonSubmit={this.onButtonSubmit}
         />
-        <FaceRecogntion />
+        <FaceRecognition imageUrl={this.state.imageUrl} />
       </div>
     );
   }
