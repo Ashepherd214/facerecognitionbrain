@@ -19,9 +19,7 @@ import './App.css';
 *<Rank name={this.state.user.name} entries={this.state.user.entries} />
 */
 
-const app = new Clarifai.App({
-  apiKey: "ad5b9825c91e49818b99163fdf1ad0d1"
-});
+
 
 const particleOptions = {
   particles: {
@@ -37,29 +35,31 @@ const particleOptions = {
     events: {
       onhover: {
         enable: true,
-        mode: "grab"
+        mode: "bubble"
       }
     }
+  }
+}
+
+const initialState = {
+  input: '',
+  imageUrl: '',
+  box: {},
+  route: 'signin',
+  isSignedIn: false,
+  user: {
+    id: '',
+    name: '',
+    email: '',
+    entries: 0,
+    joined: ''
   }
 }
 
 class App extends Component {
   constructor() {
     super()
-    this.state  = {
-      input: '',
-      imageUrl: '',
-      box: {},
-      route: 'signin',
-      isSignedIn: false,
-      user: {
-        id: '',
-        name: '',
-        email: '',
-        entries: 0,
-        joined: ''
-      }
-    }
+    this.state  = initialState
   }
 
   loadUser = (data) => {
@@ -97,14 +97,17 @@ class App extends Component {
   onPictureSubmit = () => {
 
     this.setState({imageUrl: this.state.input})
-    app.models
-      .predict(
-        Clarifai.FACE_DETECT_MODEL,
-        this.state.input
-      )
+    fetch('https://fast-crag-77011.herokuapp.com/imageurl', {
+      method: 'post',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+          input: this.state.input
+      })
+    })
+    .then(response => response.json())
       .then(response => {
         if (response) {
-          fetch('http://localhost:3000/image', {
+          fetch('https://fast-crag-77011.herokuapp.com/image', {
             method: 'put',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({
@@ -115,6 +118,7 @@ class App extends Component {
           .then(count => {
             this.setState(Object.assign(this.state.user, { entries: count}))
           })
+          .catch(console.log)
 
         }
         this.displayFaceBox(this.calculateFaceLocation(response))
@@ -125,7 +129,7 @@ class App extends Component {
 
   onRouteChange = (route) => {
     if (route === 'signout') {
-      this.setState({isSignedIn: false})
+      this.setState(initialState)
     } else if (route === 'home') {
       this.setState({isSignedIn: true})
     }
@@ -141,7 +145,10 @@ class App extends Component {
         { route === 'home' 
         ? <div>
             <Logo />
-            <Rank name={this.state.user.name} entries={this.state.user.entries}/>
+            <Rank 
+              name={this.state.user.name} 
+              entries={this.state.user.entries}
+            />
             <ImageLinkForm 
               onInputChange={this.onInputChange} 
               onPictureSubmit={this.onPictureSubmit}
@@ -149,7 +156,7 @@ class App extends Component {
             <FaceRecognition box={box} imageUrl={imageUrl} />
           </div>
         : (
-            this.state.route === 'signin'
+            route === 'signin'
             ? <Signin loadUser={this.loadUser} onRouteChange={this.onRouteChange} />
             : <Register loadUser={this.loadUser} onRouteChange={this.onRouteChange} />
           )
